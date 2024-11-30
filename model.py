@@ -5,31 +5,9 @@ from torchvision import datasets, transforms
 from datetime import datetime
 import ssl
 import os
-import urllib.request
-import gzip
-import numpy as np
 
 # Handle SSL certificate issues
 ssl._create_default_https_context = ssl._create_unverified_context
-
-def download_mnist():
-    base_url = 'https://storage.googleapis.com/cvdf-datasets/mnist/'
-    files = {
-        'train_images': 'train-images-idx3-ubyte.gz',
-        'train_labels': 'train-labels-idx1-ubyte.gz',
-        'test_images': 't10k-images-idx3-ubyte.gz',
-        'test_labels': 't10k-labels-idx1-ubyte.gz'
-    }
-    
-    os.makedirs('data/MNIST/raw', exist_ok=True)
-    
-    for file_type, file_name in files.items():
-        url = base_url + file_name
-        save_path = os.path.join('data/MNIST/raw', file_name)
-        
-        if not os.path.exists(save_path):
-            print(f'Downloading {file_name}...')
-            urllib.request.urlretrieve(url, save_path)
 
 class SimpleCNN(nn.Module):
     def __init__(self):
@@ -48,9 +26,6 @@ class SimpleCNN(nn.Module):
         return x
 
 def train_model():
-    # Download MNIST dataset first
-    download_mnist()
-    
     # Set device
     device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
     print(f"Using device: {device}")
@@ -62,8 +37,10 @@ def train_model():
     ])
     
     try:
-        train_dataset = datasets.MNIST('./data', train=True, download=False, transform=transform)
-    except RuntimeError as e:
+        print("Downloading and loading MNIST dataset...")
+        train_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform)
+        print("Dataset loaded successfully!")
+    except Exception as e:
         print(f"Error loading dataset: {e}")
         return None
         
@@ -74,6 +51,7 @@ def train_model():
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters())
     
+    print("Starting training...")
     # Train for one epoch
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
