@@ -13,26 +13,25 @@ ssl._create_default_https_context = ssl._create_unverified_context
 class SimpleCNN(nn.Module):
     def __init__(self):
         super(SimpleCNN, self).__init__()
-        # Reduced number of filters and added batch normalization
-        self.conv1 = nn.Conv2d(1, 16, kernel_size=3, padding=1)  # Reduced from 32 to 16
-        self.bn1 = nn.BatchNorm2d(16)
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, padding=1)  # Reduced from 64 to 32
-        self.bn2 = nn.BatchNorm2d(32)
-        self.conv3 = nn.Conv2d(32, 32, kernel_size=3, padding=1)  # Reduced from 64 to 32
-        self.bn3 = nn.BatchNorm2d(32)
-        self.fc1 = nn.Linear(32 * 3 * 3, 64)  # Reduced from 128 to 64
-        self.fc2 = nn.Linear(64, 10)
-        self.pool = nn.MaxPool2d(2, 2)
-        self.dropout = nn.Dropout(0.25)
+        # First two conv layers without pooling
+        self.conv1 = nn.Conv2d(1, 16, kernel_size=3, stride=1)    # 28x28 -> 26x26
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1)   # 26x26 -> 24x24
+        self.pool = nn.MaxPool2d(2, 2)                            # 24x24 -> 12x12
+        self.conv3 = nn.Conv2d(32, 16, kernel_size=1)            # 12x12 -> 12x12 (1x1 conv)
+        self.conv4 = nn.Conv2d(16, 32, kernel_size=3, stride=1)   # 12x12 -> 10x10
+        self.conv5 = nn.Conv2d(32, 16, kernel_size=3, stride=1)   # 10x10 -> 8x8
+        self.fc = nn.Linear(16 * 8 * 8, 10)                       # Direct mapping to output classes
         self.relu = nn.ReLU()
 
     def forward(self, x):
-        x = self.pool(self.relu(self.bn1(self.conv1(x))))  # 28x28 -> 14x14
-        x = self.pool(self.relu(self.bn2(self.conv2(x))))  # 14x14 -> 7x7
-        x = self.pool(self.relu(self.bn3(self.conv3(x))))  # 7x7 -> 3x3
-        x = x.view(-1, 32 * 3 * 3)
-        x = self.dropout(self.relu(self.fc1(x)))
-        x = self.fc2(x)
+        x = self.relu(self.conv1(x))      # 28x28 -> 26x26
+        x = self.relu(self.conv2(x))      # 26x26 -> 24x24
+        x = self.pool(x)                  # 24x24 -> 12x12
+        x = self.relu(self.conv3(x))      # 12x12 -> 12x12 (1x1 conv, 32->16)
+        x = self.relu(self.conv4(x))      # 12x12 -> 10x10
+        x = self.relu(self.conv5(x))      # 10x10 -> 8x8
+        x = x.view(-1, 16 * 8 * 8)        # Flatten
+        x = self.fc(x)                    # Direct mapping to 10 classes
         return x
 
 def print_model_summary(model):
@@ -47,43 +46,48 @@ def print_model_summary(model):
     # Conv1 layer
     conv1_params = sum(p.numel() for p in model.conv1.parameters())
     print(f"Conv1 Layer: 1 -> 16 channels, 3x3 kernel")
-    print(f"Output shape: 28x28 -> 14x14 (after pooling)")
+    print(f"Output shape: 28x28 -> 26x26")
     print(f"Parameters: {conv1_params:,}")
     total_params += conv1_params
     
     # Conv2 layer
     conv2_params = sum(p.numel() for p in model.conv2.parameters())
     print(f"\nConv2 Layer: 16 -> 32 channels, 3x3 kernel")
-    print(f"Output shape: 14x14 -> 7x7 (after pooling)")
+    print(f"Output shape: 26x26 -> 24x24")
     print(f"Parameters: {conv2_params:,}")
     total_params += conv2_params
     
-    # Conv3 layer
+    # MaxPool layer
+    print(f"\nMaxPool Layer: 2x2, stride 2")
+    print(f"Output shape: 24x24 -> 12x12")
+    print(f"Parameters: 0")
+    
+    # Conv3 layer (1x1)
     conv3_params = sum(p.numel() for p in model.conv3.parameters())
-    print(f"\nConv3 Layer: 32 -> 32 channels, 3x3 kernel")
-    print(f"Output shape: 7x7 -> 3x3 (after pooling)")
+    print(f"\nConv3 Layer: 32 -> 16 channels, 1x1 kernel")
+    print(f"Output shape: 12x12 -> 12x12")
     print(f"Parameters: {conv3_params:,}")
     total_params += conv3_params
     
-    # FC1 layer
-    fc1_params = sum(p.numel() for p in model.fc1.parameters())
-    print(f"\nFC1 Layer: {32 * 3 * 3} -> 64 neurons")
-    print(f"Parameters: {fc1_params:,}")
-    total_params += fc1_params
+    # Conv4 layer
+    conv4_params = sum(p.numel() for p in model.conv4.parameters())
+    print(f"\nConv4 Layer: 16 -> 32 channels, 3x3 kernel")
+    print(f"Output shape: 12x12 -> 10x10")
+    print(f"Parameters: {conv4_params:,}")
+    total_params += conv4_params
     
-    # FC2 layer
-    fc2_params = sum(p.numel() for p in model.fc2.parameters())
-    print(f"\nFC2 Layer: 64 -> 10 neurons (output)")
-    print(f"Parameters: {fc2_params:,}")
-    total_params += fc2_params
+    # Conv5 layer
+    conv5_params = sum(p.numel() for p in model.conv5.parameters())
+    print(f"\nConv5 Layer: 32 -> 16 channels, 3x3 kernel")
+    print(f"Output shape: 10x10 -> 8x8")
+    print(f"Parameters: {conv5_params:,}")
+    total_params += conv5_params
     
-    # BatchNorm parameters
-    bn_params = sum(p.numel() for p in model.bn1.parameters()) + \
-                sum(p.numel() for p in model.bn2.parameters()) + \
-                sum(p.numel() for p in model.bn3.parameters())
-    print(f"\nBatch Normalization Layers")
-    print(f"Parameters: {bn_params:,}")
-    total_params += bn_params
+    # FC layer
+    fc_params = sum(p.numel() for p in model.fc.parameters())
+    print(f"\nFC Layer: {16 * 8 * 8} -> 10 neurons (output)")
+    print(f"Parameters: {fc_params:,}")
+    total_params += fc_params
     
     print("\n" + "="*50)
     print(f"Total Parameters: {total_params:,}")
@@ -112,23 +116,16 @@ def train_model():
     model = SimpleCNN()
     print_model_summary(model)
     
-    # Load MNIST dataset with augmentation
-    transform_train = transforms.Compose([
-        transforms.ToTensor(),
-        transforms.Normalize((0.1307,), (0.3081,)),
-        transforms.RandomRotation(10),
-        transforms.RandomAffine(degrees=0, translate=(0.1, 0.1))
-    ])
-    
-    transform_test = transforms.Compose([
+    # Load MNIST dataset
+    transform = transforms.Compose([
         transforms.ToTensor(),
         transforms.Normalize((0.1307,), (0.3081,))
     ])
     
     try:
         print("Downloading and loading MNIST dataset...")
-        train_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform_train)
-        test_dataset = datasets.MNIST('./data', train=False, download=True, transform=transform_test)
+        train_dataset = datasets.MNIST('./data', train=True, download=True, transform=transform)
+        test_dataset = datasets.MNIST('./data', train=False, download=True, transform=transform)
         print(f"Dataset loaded successfully! Training samples: {len(train_dataset)}, Test samples: {len(test_dataset)}")
     except Exception as e:
         print(f"Error loading dataset: {e}")
@@ -138,8 +135,7 @@ def train_model():
     test_loader = torch.utils.data.DataLoader(test_dataset, batch_size=1000, shuffle=False)
     
     criterion = nn.CrossEntropyLoss()
-    optimizer = optim.Adam(model.parameters(), lr=0.001)
-    scheduler = optim.lr_scheduler.ReduceLROnPlateau(optimizer, 'min', patience=2)
+    optimizer = optim.Adam(model.parameters(), lr=0.01)
     
     print("\nStarting training...")
     model.train()

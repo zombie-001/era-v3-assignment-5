@@ -23,7 +23,7 @@ def test_model_architecture():
     # Count parameters
     total_params = sum(p.numel() for p in model.parameters())
     print(f"Total parameters: {total_params}")
-    assert total_params < 100000, f"Model has too many parameters: {total_params}"
+    assert total_params < 25000, f"Model has too many parameters: {total_params}"
 
 def test_model_accuracy():
     # Load the model
