@@ -13,24 +13,24 @@ ssl._create_default_https_context = ssl._create_unverified_context
 class SimpleCNN(nn.Module):
     def __init__(self):
         super(SimpleCNN, self).__init__()
-        # Increase initial filters and add batch normalization
-        self.conv1 = nn.Conv2d(1, 32, kernel_size=3, padding=1)
-        self.bn1 = nn.BatchNorm2d(32)
-        self.conv2 = nn.Conv2d(32, 64, kernel_size=3, padding=1)
-        self.bn2 = nn.BatchNorm2d(64)
-        self.conv3 = nn.Conv2d(64, 64, kernel_size=3, padding=1)
-        self.bn3 = nn.BatchNorm2d(64)
-        self.fc1 = nn.Linear(64 * 3 * 3, 128)
-        self.fc2 = nn.Linear(128, 10)
+        # Reduced number of filters and added batch normalization
+        self.conv1 = nn.Conv2d(1, 16, kernel_size=3, padding=1)  # Reduced from 32 to 16
+        self.bn1 = nn.BatchNorm2d(16)
+        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, padding=1)  # Reduced from 64 to 32
+        self.bn2 = nn.BatchNorm2d(32)
+        self.conv3 = nn.Conv2d(32, 32, kernel_size=3, padding=1)  # Reduced from 64 to 32
+        self.bn3 = nn.BatchNorm2d(32)
+        self.fc1 = nn.Linear(32 * 3 * 3, 64)  # Reduced from 128 to 64
+        self.fc2 = nn.Linear(64, 10)
         self.pool = nn.MaxPool2d(2, 2)
         self.dropout = nn.Dropout(0.25)
         self.relu = nn.ReLU()
 
     def forward(self, x):
-        x = self.pool(self.relu(self.bn1(self.conv1(x))))
-        x = self.pool(self.relu(self.bn2(self.conv2(x))))
-        x = self.pool(self.relu(self.bn3(self.conv3(x))))
-        x = x.view(-1, 64 * 3 * 3)
+        x = self.pool(self.relu(self.bn1(self.conv1(x))))  # 28x28 -> 14x14
+        x = self.pool(self.relu(self.bn2(self.conv2(x))))  # 14x14 -> 7x7
+        x = self.pool(self.relu(self.bn3(self.conv3(x))))  # 7x7 -> 3x3
+        x = x.view(-1, 32 * 3 * 3)
         x = self.dropout(self.relu(self.fc1(x)))
         x = self.fc2(x)
         return x
@@ -46,34 +46,34 @@ def print_model_summary(model):
     
     # Conv1 layer
     conv1_params = sum(p.numel() for p in model.conv1.parameters())
-    print(f"Conv1 Layer: 1 -> 32 channels, 3x3 kernel")
+    print(f"Conv1 Layer: 1 -> 16 channels, 3x3 kernel")
     print(f"Output shape: 28x28 -> 14x14 (after pooling)")
     print(f"Parameters: {conv1_params:,}")
     total_params += conv1_params
     
     # Conv2 layer
     conv2_params = sum(p.numel() for p in model.conv2.parameters())
-    print(f"\nConv2 Layer: 32 -> 64 channels, 3x3 kernel")
+    print(f"\nConv2 Layer: 16 -> 32 channels, 3x3 kernel")
     print(f"Output shape: 14x14 -> 7x7 (after pooling)")
     print(f"Parameters: {conv2_params:,}")
     total_params += conv2_params
     
     # Conv3 layer
     conv3_params = sum(p.numel() for p in model.conv3.parameters())
-    print(f"\nConv3 Layer: 64 -> 64 channels, 3x3 kernel")
+    print(f"\nConv3 Layer: 32 -> 32 channels, 3x3 kernel")
     print(f"Output shape: 7x7 -> 3x3 (after pooling)")
     print(f"Parameters: {conv3_params:,}")
     total_params += conv3_params
     
     # FC1 layer
     fc1_params = sum(p.numel() for p in model.fc1.parameters())
-    print(f"\nFC1 Layer: {64 * 3 * 3} -> 128 neurons")
+    print(f"\nFC1 Layer: {32 * 3 * 3} -> 64 neurons")
     print(f"Parameters: {fc1_params:,}")
     total_params += fc1_params
     
     # FC2 layer
     fc2_params = sum(p.numel() for p in model.fc2.parameters())
-    print(f"\nFC2 Layer: 128 -> 10 neurons (output)")
+    print(f"\nFC2 Layer: 64 -> 10 neurons (output)")
     print(f"Parameters: {fc2_params:,}")
     total_params += fc2_params
     
