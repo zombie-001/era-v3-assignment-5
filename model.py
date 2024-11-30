@@ -14,24 +14,35 @@ class SimpleCNN(nn.Module):
     def __init__(self):
         super(SimpleCNN, self).__init__()
         # First two conv layers without pooling
-        self.conv1 = nn.Conv2d(1, 16, kernel_size=3, stride=1)    # 28x28 -> 26x26
-        self.conv2 = nn.Conv2d(16, 32, kernel_size=3, stride=1)   # 26x26 -> 24x24
+        self.conv1 = nn.Conv2d(1, 8, kernel_size=3, stride=1)     # 28x28 -> 26x26
+        self.bn1 = nn.BatchNorm2d(8)
+        
+        self.conv2 = nn.Conv2d(8, 16, kernel_size=3, stride=1)    # 26x26 -> 24x24
+        self.bn2 = nn.BatchNorm2d(16)
+        
         self.pool = nn.MaxPool2d(2, 2)                            # 24x24 -> 12x12
-        self.conv3 = nn.Conv2d(32, 16, kernel_size=1)            # 12x12 -> 12x12 (1x1 conv)
-        self.conv4 = nn.Conv2d(16, 32, kernel_size=3, stride=1)   # 12x12 -> 10x10
-        self.conv5 = nn.Conv2d(32, 16, kernel_size=3, stride=1)   # 10x10 -> 8x8
-        self.fc = nn.Linear(16 * 8 * 8, 10)                       # Direct mapping to output classes
+        
+        self.conv3 = nn.Conv2d(16, 8, kernel_size=1)             # 12x12 -> 12x12 (1x1 conv)
+        self.bn3 = nn.BatchNorm2d(8)
+        
+        self.conv4 = nn.Conv2d(8, 16, kernel_size=3, stride=1)    # 12x12 -> 10x10
+        self.bn4 = nn.BatchNorm2d(16)
+        
+        self.conv5 = nn.Conv2d(16, 8, kernel_size=3, stride=1)    # 10x10 -> 8x8
+        self.bn5 = nn.BatchNorm2d(8)
+        
+        self.fc = nn.Linear(8 * 8 * 8, 10)
         self.relu = nn.ReLU()
 
     def forward(self, x):
-        x = self.relu(self.conv1(x))      # 28x28 -> 26x26
-        x = self.relu(self.conv2(x))      # 26x26 -> 24x24
-        x = self.pool(x)                  # 24x24 -> 12x12
-        x = self.relu(self.conv3(x))      # 12x12 -> 12x12 (1x1 conv, 32->16)
-        x = self.relu(self.conv4(x))      # 12x12 -> 10x10
-        x = self.relu(self.conv5(x))      # 10x10 -> 8x8
-        x = x.view(-1, 16 * 8 * 8)        # Flatten
-        x = self.fc(x)                    # Direct mapping to 10 classes
+        x = self.relu(self.bn1(self.conv1(x)))      # 28x28 -> 26x26
+        x = self.relu(self.bn2(self.conv2(x)))      # 26x26 -> 24x24
+        x = self.pool(x)                            # 24x24 -> 12x12
+        x = self.relu(self.bn3(self.conv3(x)))      # 12x12 -> 12x12
+        x = self.relu(self.bn4(self.conv4(x)))      # 12x12 -> 10x10
+        x = self.relu(self.bn5(self.conv5(x)))      # 10x10 -> 8x8
+        x = x.view(-1, 8 * 8 * 8)                   # Flatten
+        x = self.fc(x)                              # Output
         return x
 
 def print_model_summary(model):
@@ -45,14 +56,14 @@ def print_model_summary(model):
     
     # Conv1 layer
     conv1_params = sum(p.numel() for p in model.conv1.parameters())
-    print(f"Conv1 Layer: 1 -> 16 channels, 3x3 kernel")
+    print(f"Conv1 Layer: 1 -> 8 channels, 3x3 kernel")
     print(f"Output shape: 28x28 -> 26x26")
     print(f"Parameters: {conv1_params:,}")
     total_params += conv1_params
     
     # Conv2 layer
     conv2_params = sum(p.numel() for p in model.conv2.parameters())
-    print(f"\nConv2 Layer: 16 -> 32 channels, 3x3 kernel")
+    print(f"\nConv2 Layer: 8 -> 16 channels, 3x3 kernel")
     print(f"Output shape: 26x26 -> 24x24")
     print(f"Parameters: {conv2_params:,}")
     total_params += conv2_params
@@ -64,28 +75,28 @@ def print_model_summary(model):
     
     # Conv3 layer (1x1)
     conv3_params = sum(p.numel() for p in model.conv3.parameters())
-    print(f"\nConv3 Layer: 32 -> 16 channels, 1x1 kernel")
+    print(f"\nConv3 Layer: 16 -> 8 channels, 1x1 kernel")
     print(f"Output shape: 12x12 -> 12x12")
     print(f"Parameters: {conv3_params:,}")
     total_params += conv3_params
     
     # Conv4 layer
     conv4_params = sum(p.numel() for p in model.conv4.parameters())
-    print(f"\nConv4 Layer: 16 -> 32 channels, 3x3 kernel")
+    print(f"\nConv4 Layer: 8 -> 16 channels, 3x3 kernel")
     print(f"Output shape: 12x12 -> 10x10")
     print(f"Parameters: {conv4_params:,}")
     total_params += conv4_params
     
     # Conv5 layer
     conv5_params = sum(p.numel() for p in model.conv5.parameters())
-    print(f"\nConv5 Layer: 32 -> 16 channels, 3x3 kernel")
+    print(f"\nConv5 Layer: 16 -> 8 channels, 3x3 kernel")
     print(f"Output shape: 10x10 -> 8x8")
     print(f"Parameters: {conv5_params:,}")
     total_params += conv5_params
     
     # FC layer
     fc_params = sum(p.numel() for p in model.fc.parameters())
-    print(f"\nFC Layer: {16 * 8 * 8} -> 10 neurons (output)")
+    print(f"\nFC Layer: {8 * 8 * 8} -> 10 neurons (output)")
     print(f"Parameters: {fc_params:,}")
     total_params += fc_params
     
