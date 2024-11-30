@@ -22,6 +22,7 @@ def test_model_architecture():
     
     # Count parameters
     total_params = sum(p.numel() for p in model.parameters())
+    print(f"Total parameters: {total_params}")
     assert total_params < 100000, f"Model has too many parameters: {total_params}"
 
 def test_model_accuracy():
@@ -50,8 +51,8 @@ def test_model_accuracy():
             correct += (predicted == target).sum().item()
     
     accuracy = 100 * correct / total
-    assert accuracy > 80, f"Model accuracy is too low: {accuracy:.2f}%"
     print(f"Model accuracy: {accuracy:.2f}%")
+    assert accuracy > 80, f"Model accuracy is too low: {accuracy:.2f}%"
 
 if __name__ == "__main__":
     pytest.main([__file__]) 
