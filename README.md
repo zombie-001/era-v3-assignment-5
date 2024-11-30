@@ -1,5 +1,7 @@
 # ML Model CI/CD Pipeline
 
+[![ML Pipeline](https://github.com/<your-username>/<repository-name>/actions/workflows/ml-pipeline.yml/badge.svg)](https://github.com/<your-username>/<repository-name>/actions/workflows/ml-pipeline.yml)
+
 This repository implements a Convolutional Neural Network (CNN) for MNIST digit classification with a complete CI/CD pipeline using GitHub Actions.
 
 ## Project Overview
