@@ -3,3 +3,4 @@ torch==2.2.0+cpu
 torchvision==0.17.0+cpu
 pytest>=6.0.0
 numpy>=1.19.0
+tqdm>=4.65.0
