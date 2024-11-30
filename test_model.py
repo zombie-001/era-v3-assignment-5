@@ -25,10 +25,8 @@ def test_model_architecture():
     assert total_params < 100000, f"Model has too many parameters: {total_params}"
 
 def test_model_accuracy():
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    
     # Load the model
-    model = SimpleCNN().to(device)
+    model = SimpleCNN()
     model_path = get_latest_model()
     model.load_state_dict(torch.load(model_path))
     model.eval()
@@ -46,7 +44,6 @@ def test_model_accuracy():
     
     with torch.no_grad():
         for data, target in test_loader:
-            data, target = data.to(device), target.to(device)
             outputs = model(data)
             _, predicted = torch.max(outputs.data, 1)
             total += target.size(0)

@@ -26,9 +26,7 @@ class SimpleCNN(nn.Module):
         return x
 
 def train_model():
-    # Set device
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    print(f"Using device: {device}")
+    print("Starting training process...")
     
     # Load MNIST dataset
     transform = transforms.Compose([
@@ -47,7 +45,7 @@ def train_model():
     train_loader = torch.utils.data.DataLoader(train_dataset, batch_size=64, shuffle=True)
     
     # Initialize model
-    model = SimpleCNN().to(device)
+    model = SimpleCNN()
     criterion = nn.CrossEntropyLoss()
     optimizer = optim.Adam(model.parameters())
     
@@ -55,7 +53,6 @@ def train_model():
     # Train for one epoch
     model.train()
     for batch_idx, (data, target) in enumerate(train_loader):
-        data, target = data.to(device), target.to(device)
         optimizer.zero_grad()
         output = model(data)
         loss = criterion(output, target)
