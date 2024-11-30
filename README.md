@@ -132,3 +132,41 @@ During training, you can monitor:
 - Model files are saved with timestamp and accuracy for versioning
 - All tests must pass before deployment
 - Training progress is displayed with tqdm progress bars
+
+## Test Suite
+
+The model undergoes comprehensive testing through six main test cases:
+
+1. **Architecture Test**
+   - Validates input/output shapes (28x28 → 10)
+   - Verifies parameter count (<25,000)
+   - Checks model structure
+
+2. **Batch Processing Test**
+   - Tests multiple batch sizes: 1, 4, 16, 32, 64
+   - Ensures consistent output shapes
+   - Validates batch handling capability
+
+3. **Components Test**
+   - Verifies presence of all layers:
+     * 5 Convolution layers
+     * 5 Batch Normalization layers
+     * Final Linear layer
+   - Checks layer connectivity
+
+4. **Gradient Flow Test**
+   - Validates backpropagation
+   - Ensures proper gradient computation
+   - Checks learning capability
+
+5. **Accuracy Test**
+   - Measures overall accuracy (>80% required)
+   - Per-digit accuracy (>70% per class)
+   - Comprehensive performance metrics
+
+6. **Robustness Test**
+   - Tests with various noise levels (0.1, 0.2, 0.3)
+   - Validates model stability
+   - Ensures consistent output structure
+
+Each test provides detailed feedback and must pass for successful deployment.
